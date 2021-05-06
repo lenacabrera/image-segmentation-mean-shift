@@ -33,6 +33,7 @@ def reshape_img(img, features):
         y = np.array(list(range(img.shape[1])))
         coordinates = np.array(np.meshgrid(x, y))
         image = np.append(img, coordinates.T, axis=2)
+        image = image.reshape((image.shape[2], image.shape[0] * image.shape[1]))
     return image
 
 
@@ -171,5 +172,5 @@ if __name__ == '__main__':
     images = load_images(dir='./img/', filenames=["181091.jpg", "368078.jpg"])
     img = images[0]
     img = reshape_img(img, Features.color_spatial)
-    print(img.shape, img[0,0])
+    print(img.shape, img[0])
 
