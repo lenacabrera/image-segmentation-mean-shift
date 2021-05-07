@@ -3,6 +3,7 @@ import scipy.io
 import matplotlib.pyplot as plt
 from enum import Enum
 import numpy as np
+from scipy.spatial import distance
 
 
 class Features(Enum):
@@ -18,10 +19,16 @@ def load_data(path):
 
 
 def load_images(dir, filenames):
+    print("Load image ...")
     images = []
     for filename in filenames:
         images.append(plt.imread(dir + filename, 0))
     return images
+
+
+def preprocess_data(img, features):
+    img = reshape_img(img, features)
+    return img
 
 
 def reshape_img(img, features):
@@ -67,8 +74,9 @@ def mean_shift(data, r):
     -------
 
     """
+    peaks = np.array([find_peak(data, idx, r) for idx in range(data.shape[1])])
     labels = []
-    peaks = []
+
 
     # call find_peak for each point and then assign a label to each point according to its peak
     # after each call compare peaks and merge similar ones (two peaks are the same if their distance is < r/2)
@@ -144,7 +152,10 @@ def compute_distances(data_point, data, metric='euclidean'):
     -------
 
     """
-    pass
+    # dist = [np.linalg.norm(data_point - p) for p in data.T]
+    idx, = np.where(np.array([np.array_equal(p, data_point) for p in data. T]) == True)
+    distances = np.array([distance.euclidean(data_point, p) for i, p in enumerate(data.T) if i != idx[0]])
+    return distances
 
 
 def image_segmentation(img, r):
@@ -171,6 +182,7 @@ if __name__ == '__main__':
     # data = load_data("data/pts.mat")
     images = load_images(dir='./img/', filenames=["181091.jpg", "368078.jpg"])
     img = images[0]
-    img = reshape_img(img, Features.color_spatial)
-    print(img.shape, img[0])
-
+    img = preprocess_data(img, Features.color_spatial)
+    print(img.shape, img.T[0])
+    distances = compute_distances(img[:, 0], img)
+    print(distances)
