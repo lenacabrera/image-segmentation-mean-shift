@@ -86,56 +86,6 @@ def find_peak(data, idx, r, threshold=0.01):
     return peak, similar_peaks
 
 
-
-    # # retrieve data point
-    # data_point = data[:, idx]
-    # # center = data_point
-    # old_peak = data_point
-    #
-    # while difference_peaks > threshold:
-    #     # define window
-    #     distances = compute_distances(data_point, data)
-    #     window_indices = np.argwhere(distances <= r).flatten()
-    #     # neighbors_indices = np.delete(window_indices, np.where(window_indices == idx))
-    #     # if len(neighbors_indices) == 0:
-    #     #     break
-    #     # neighbors = data.T[neighbors_indices]
-    #     neighbors = data.T[window_indices]
-    #
-    #     # compute the mean of window
-    #     peak = np.mean(neighbors, axis=0).reshape(-1, 1)
-    #     difference_peaks = peak - old_peak
-    #     # if np.linalg.norm(peak - old_peak) <= threshold:
-    #     #     break
-    #
-    # return peak
-
-
-
-    # # retrieve data point
-    # data_point = data[:, idx]
-    # center = data_point
-    #
-    # not_at_peak = True
-    # # check if peak is reached
-    # while not_at_peak:
-    #     # window
-    #     dist = compute_distances(center, data)
-    #     window_indices = np.argwhere(dist <= r).flatten()
-    #     neighbors_indices = np.delete(window_indices, np.where(window_indices == idx))
-    #     if len(neighbors_indices) == 0:
-    #         return center
-    #     neighbors = data.T[neighbors_indices]
-    #     # compute the mean
-    #     peak = np.mean(neighbors, axis=0).reshape(-1, 1)
-    #     dist_peak_point = compute_distances(center, data)
-    #     if np.mean(dist_peak_point) <= threshold:
-    #         break
-    #     else:
-    #         center = peak
-    # return peak
-
-
 def mean_shift(data, r):
     """
     Computes peaks and corresponding labels of all points in the data.
@@ -240,13 +190,6 @@ def compute_distances(data_point, data, metric='euclidean'):
     -------
 
     """
-    # dist = [np.linalg.norm(data_point - p) for p in data.T]
-    # idx, = np.where(np.array([np.array_equal(p, data_point) for p in data.T]))
-    # # distances = np.array([distance.euclidean(data_point, p) for i, p in enumerate(data.T) if i != idx[0]])
-    # distances = np.array([distance.euclidean(data_point, p) for p in data.T])
-    # # return distances, idx
-    # return distances
-
     distances = np.array([scipy.spatial.distance.pdist(np.vstack((data_point, p)), metric=metric) for p in data.T])
     return distances
 
