@@ -1,4 +1,6 @@
+import scipy.io
 import numpy as np
+from scipy.spatial import distance
 
 
 def compute_distances(data_point, data, metric='euclidean'):
@@ -15,8 +17,9 @@ def compute_distances(data_point, data, metric='euclidean'):
     -------
 
     """
-    distances = np.array([scipy.spatial.distance.pdist(np.vstack((data_point, p)), metric=metric) for p in data.T])
-    return distances
+    # distances = np.array([scipy.spatial.distance.pdist(np.vstack((data_point, p)), metric=metric) for p in data.T])
+    distances = np.array([scipy.spatial.distance.cdist(data_point.reshape(1, -1), p.reshape(1, -1), metric=metric) for p in data.T])
+    return distances.flatten()
 
 
 def find_peak(data, idx, r, threshold=0.01):
@@ -40,26 +43,23 @@ def find_peak(data, idx, r, threshold=0.01):
     peak = data_point
     old_peak = peak
     difference_peaks = np.ones((5,))
-    similar_peaks = np.zeros((data.shape[1], 1))
 
-    while np.all(difference_peaks > threshold):  # TODO all or any
+    # shift window to mean until convergence...
+    while np.any(difference_peaks > threshold):  # TODO all or any
         # define window
         distances = compute_distances(data_point, data)
-        # check if peaks are similar, i.e. distance between them is smaller r/2
-        if np.all(distances < r/2):
-            are_similar_peaks = distances < r/2
-            similar_peaks = are_similar_peaks.astype(int)
-
         # retrieve points in window
         window_indices = np.argwhere(distances <= r).flatten()
         neighbors = data.T[window_indices]
         # compute peak of window
+        old_peak = peak
         peak = np.mean(neighbors, axis=0)
         # compare peak to previous peak
         difference_peaks = np.abs(peak - old_peak)
+        # shift window to mean
+        data_point = peak
 
-
-    return peak, similar_peaks
+    return peak, window_indices
 
 
 def mean_shift(data, r):
@@ -83,16 +83,17 @@ def mean_shift(data, r):
     labels = np.zeros((data.shape[1], ))
 
     n_data_points = data.shape[1]
-    unique_labels = 0
+    unique_labels = 1
 
     for idx in range(n_data_points):
-        peak, merge_peaks = find_peak(data, idx, r, threshold=3)#0.01)
+        print("idx: ", idx)
+        peak, _ = find_peak(data, idx, r, threshold=0.01)
 
         # check if similar peak already found previously
-        same_peaks = np.argwhere((np.abs(peaks - np.vstack([peak] * n_data_points)) < r / 2).all(axis=0))
+        same_peaks = np.argwhere((np.abs(peaks[:idx+1] - np.vstack([peak] * (idx + 1))) < r / 2).all(axis=1))
         if same_peaks.size > 0:
             # assign same label (as previously found peak)
-            label = labels[same_peaks[0]]
+            label = labels[same_peaks[0, 0]]
         else:
             # assign new label
             label = unique_labels
@@ -101,24 +102,8 @@ def mean_shift(data, r):
         labels[idx] = label
         peaks[idx] = peak
 
+    labels = labels.reshape((-1, 1))
     return labels, peaks
-
-
-def mean_shift_opt(data, r, c):
-    """
-    First speedup: "Basin of attraction"
-    Associates each data point that is at a distance <= r from the peak with the cluster defined by that peak.
-
-    Parameters
-    ----------
-    data : n-dimensional dataset
-    r : search window radius
-    c : constant value
-
-    Returns
-    -------
-
-    """
 
 
 def find_peak_opt(data, idx, r, threshold, c=4):
@@ -141,3 +126,110 @@ def find_peak_opt(data, idx, r, threshold, c=4):
 
     """
 
+    # retrieve data point
+    data_point = data[:, idx]
+
+    peak = data_point
+    old_peak = peak
+    difference_peaks = np.ones((5,))
+    cpts = np.zeros((data.shape[1], 1))
+
+    while np.all(difference_peaks > threshold):  # TODO all or any
+        # define window
+        distances = compute_distances(data_point, data)
+        # check if peaks are similar, i.e. distance between them is smaller r/c
+        cpts[distances < r/c] = 1
+
+        # retrieve points in window
+        window_indices = np.argwhere(distances <= r).flatten()
+        neighbors = data.T[window_indices]
+        # compute peak of window
+        peak = np.mean(neighbors, axis=0)
+        # compare peak to previous peak
+        difference_peaks = np.abs(peak - old_peak)
+
+    return peak, cpts
+
+
+def mean_shift_opt(data, r, c):
+    """
+    First speedup: "Basin of attraction"
+    Associates each data point that is at a distance <= r from the peak with the cluster defined by that peak.
+
+    Parameters
+    ----------
+    data : n-dimensional dataset
+    r : search window radius
+    c : constant value
+
+    Returns
+    -------
+
+    """
+
+    peaks = np.zeros((data.shape[1], data.shape[0]))
+    labels = np.zeros((data.shape[1], ))
+
+    n_data_points = data.shape[1]
+    unique_labels = 0
+
+    for idx in range(n_data_points):
+        peak, window_indices = find_peak(data, idx, r, threshold=0.01)
+
+        # check if similar peak already found previously
+        same_peaks = np.argwhere((np.abs(peaks - np.vstack([peak] * n_data_points)) < r / 2).all(axis=0))
+        if same_peaks.size > 0:
+            # assign same label (as previously found peak)
+            label = labels[same_peaks[0]]
+            labels[window_indices] = labels[same_peaks[0]]
+        else:
+            # assign new label
+            label = unique_labels
+            unique_labels += 1
+
+        labels[idx] = label
+        peaks[idx] = peak
+
+    return labels, peaks
+
+
+def mean_shift_opt2(data, r, c):
+    """
+    First speedup: "Basin of attraction"
+    Associates each data point that is at a distance <= r from the peak with the cluster defined by that peak.
+
+    Parameters
+    ----------
+    data : n-dimensional dataset
+    r : search window radius
+    c : constant value
+
+    Returns
+    -------
+
+    """
+
+    peaks = np.zeros((data.shape[1], data.shape[0]))
+    labels = np.zeros((data.shape[1], ))
+
+    n_data_points = data.shape[1]
+    unique_labels = 0
+
+    for idx in range(n_data_points):
+        peak, window_indices = find_peak_opt(data, idx, r, threshold=0.01)
+
+        # check if similar peak already found previously
+        same_peaks = np.argwhere((np.abs(peaks - np.vstack([peak] * n_data_points)) < r / 2).all(axis=0))
+        if same_peaks.size > 0:
+            # assign same label (as previously found peak)
+            label = labels[same_peaks[0]]
+            labels[window_indices] = labels[same_peaks[0]]
+        else:
+            # assign new label
+            label = unique_labels
+            unique_labels += 1
+
+        labels[idx] = label
+        peaks[idx] = peak
+
+    return labels, peaks
