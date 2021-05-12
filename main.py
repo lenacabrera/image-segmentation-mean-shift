@@ -83,6 +83,7 @@ def find_peak(data, idx, r, threshold=0.01):
         # compare peak to previous peak
         difference_peaks = np.abs(peak - old_peak)
 
+
     return peak, similar_peaks
 
 
@@ -99,26 +100,31 @@ def mean_shift(data, r):
     -------
 
     """
-    peaks = np.zeros((data.shape[1], data.shape[0]))
-    labels = np.zeros((data.shape[1], ))
-    unique_labels = 0
-
-    for idx in range(data.shape[1]):
-        peak, merge_peaks = find_peak(data, idx, r, threshold=0.01)
-        # similar peaks get assigned the same label
-        # same_peak = np.where(peaks == peak)
-        # if len(same_peak) > 0:
-        #     label = labels[0, same_peak[0]]
-        # else:
-        #     label = unique_labels
-        #     unique_labels += 1
-        #
-        # labels[idx, 0] = label
-        peaks[idx] = peak
-
     # call find_peak for each point and then assign a label to each point according to its peak
     # after each call compare peaks and merge similar ones (two peaks are the same if their distance is < r/2)
     # if found peak already exists in peaks, computed peak is discarded and is given label associated with peak in peaks
+
+    peaks = np.zeros((data.shape[1], data.shape[0]))
+    labels = np.zeros((data.shape[1], ))
+
+    n_data_points = data.shape[1]
+    unique_labels = 0
+
+    for idx in range(n_data_points):
+        peak, merge_peaks = find_peak(data, idx, r, threshold=3)#0.01)
+
+        # check if similar peak already found previously
+        same_peaks = np.argwhere((np.abs(peaks - np.vstack([peak] * n_data_points)) < r / 2).all(axis=0))
+        if same_peaks.size > 0:
+            # assign same label (as previously found peak)
+            label = labels[same_peaks[0]]
+        else:
+            # assign new label
+            label = unique_labels
+            unique_labels += 1
+
+        labels[idx] = label
+        peaks[idx] = peak
 
     return labels, peaks
 
@@ -225,6 +231,6 @@ if __name__ == '__main__':
     # distances = compute_distances(img[:, 0], img)
     # print(distances)
     # print(find_peak(img_lab, 0, 7))
-    mean_shift(img_lab, 2)
+    labels, peaks = mean_shift(img_lab, 10)
     print("Finished, cheers!")
 
