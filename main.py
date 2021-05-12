@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from enum import Enum
 import numpy as np
 from scipy.spatial import distance
+import skimage.color
 
 
 class Features(Enum):
     color = 0
     color_spatial = 1
-
 
 
 def load_data(path):
@@ -44,7 +44,7 @@ def reshape_img(img, features):
     return image
 
 
-def find_peak(data, idx, r):
+def find_peak(data, idx, r, threshold=0.01):
     """
     Compute density peak for point p whose column index is provided.
 
@@ -58,7 +58,82 @@ def find_peak(data, idx, r):
     -------
 
     """
-    pass
+
+    # retrieve data point
+    data_point = data[:, idx]
+
+    peak = data_point
+    old_peak = peak
+    difference_peaks = np.ones((5,))
+    similar_peaks = np.zeros((data.shape[1], 1))
+
+    while np.all(difference_peaks > threshold):  # TODO all or any
+        # define window
+        distances = compute_distances(data_point, data)
+        # check if peaks are similar, i.e. distance between them is smaller r/2
+        if np.all(distances < r/2):
+            are_similar_peaks = distances < r/2
+            similar_peaks = are_similar_peaks.astype(int)
+
+        # retrieve points in window
+        window_indices = np.argwhere(distances <= r).flatten()
+        neighbors = data.T[window_indices]
+        # compute peak of window
+        peak = np.mean(neighbors, axis=0)
+        # compare peak to previous peak
+        difference_peaks = np.abs(peak - old_peak)
+
+    return peak, similar_peaks
+
+
+
+    # # retrieve data point
+    # data_point = data[:, idx]
+    # # center = data_point
+    # old_peak = data_point
+    #
+    # while difference_peaks > threshold:
+    #     # define window
+    #     distances = compute_distances(data_point, data)
+    #     window_indices = np.argwhere(distances <= r).flatten()
+    #     # neighbors_indices = np.delete(window_indices, np.where(window_indices == idx))
+    #     # if len(neighbors_indices) == 0:
+    #     #     break
+    #     # neighbors = data.T[neighbors_indices]
+    #     neighbors = data.T[window_indices]
+    #
+    #     # compute the mean of window
+    #     peak = np.mean(neighbors, axis=0).reshape(-1, 1)
+    #     difference_peaks = peak - old_peak
+    #     # if np.linalg.norm(peak - old_peak) <= threshold:
+    #     #     break
+    #
+    # return peak
+
+
+
+    # # retrieve data point
+    # data_point = data[:, idx]
+    # center = data_point
+    #
+    # not_at_peak = True
+    # # check if peak is reached
+    # while not_at_peak:
+    #     # window
+    #     dist = compute_distances(center, data)
+    #     window_indices = np.argwhere(dist <= r).flatten()
+    #     neighbors_indices = np.delete(window_indices, np.where(window_indices == idx))
+    #     if len(neighbors_indices) == 0:
+    #         return center
+    #     neighbors = data.T[neighbors_indices]
+    #     # compute the mean
+    #     peak = np.mean(neighbors, axis=0).reshape(-1, 1)
+    #     dist_peak_point = compute_distances(center, data)
+    #     if np.mean(dist_peak_point) <= threshold:
+    #         break
+    #     else:
+    #         center = peak
+    # return peak
 
 
 def mean_shift(data, r):
@@ -74,9 +149,22 @@ def mean_shift(data, r):
     -------
 
     """
-    peaks = np.array([find_peak(data, idx, r) for idx in range(data.shape[1])])
-    labels = []
+    peaks = np.zeros((data.shape[1], data.shape[0]))
+    labels = np.zeros((data.shape[1], ))
+    unique_labels = 0
 
+    for idx in range(data.shape[1]):
+        peak, merge_peaks = find_peak(data, idx, r, threshold=0.01)
+        # similar peaks get assigned the same label
+        # same_peak = np.where(peaks == peak)
+        # if len(same_peak) > 0:
+        #     label = labels[0, same_peak[0]]
+        # else:
+        #     label = unique_labels
+        #     unique_labels += 1
+        #
+        # labels[idx, 0] = label
+        peaks[idx] = peak
 
     # call find_peak for each point and then assign a label to each point according to its peak
     # after each call compare peaks and merge similar ones (two peaks are the same if their distance is < r/2)
@@ -153,8 +241,13 @@ def compute_distances(data_point, data, metric='euclidean'):
 
     """
     # dist = [np.linalg.norm(data_point - p) for p in data.T]
-    idx, = np.where(np.array([np.array_equal(p, data_point) for p in data. T]) == True)
-    distances = np.array([distance.euclidean(data_point, p) for i, p in enumerate(data.T) if i != idx[0]])
+    # idx, = np.where(np.array([np.array_equal(p, data_point) for p in data.T]))
+    # # distances = np.array([distance.euclidean(data_point, p) for i, p in enumerate(data.T) if i != idx[0]])
+    # distances = np.array([distance.euclidean(data_point, p) for p in data.T])
+    # # return distances, idx
+    # return distances
+
+    distances = np.array([scipy.spatial.distance.pdist(np.vstack((data_point, p)), metric=metric) for p in data.T])
     return distances
 
 
@@ -180,9 +273,15 @@ def image_segmentation(img, r):
 
 if __name__ == '__main__':
     # data = load_data("data/pts.mat")
-    images = load_images(dir='./img/', filenames=["181091.jpg", "368078.jpg"])
-    img = images[0]
-    img = preprocess_data(img, Features.color_spatial)
-    print(img.shape, img.T[0])
-    distances = compute_distances(img[:, 0], img)
-    print(distances)
+    images = load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
+    img_rgb = images[0]
+    img_lab = skimage.color.rgb2lab(img_rgb)
+    img_lab = preprocess_data(img_lab, Features.color_spatial)
+
+    # print(img.shape, img.T[0])
+    # distances = compute_distances(img[:, 0], img)
+    # print(distances)
+    # print(find_peak(img_lab, 0, 7))
+    mean_shift(img_lab, 2)
+    print("Finished, cheers!")
+
