@@ -36,28 +36,28 @@ def image_segmentation(img, r, c, feature_type):
 
 
 if __name__ == '__main__':
-    data = utils.load_data("data/pts.mat")
+    # data = utils.load_data("data/pts.mat")
+    # print(data.shape)
     # labels, peaks = mean_shift.mean_shift(data, r=2)
-    # labels, peaks = mean_shift.mean_shift_opt(data, r=2, c=4)
-    # # labels, peaks = mean_shift.mean_shift_opt2(data, r=2, c=4)
+    # labels, peaks = mean_shift.mean_shift_speedup1(data, r=2, c=4)
+    # labels, peaks = mean_shift.mean_shift_speedup2(data, r=2, c=4)
     # print(np.unique(labels))
     # plotclusters3D(data.T, labels, peaks)
 
-    # print(data.shape)
-    # imgs = utils.load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
-    # img_rgb = imgs[0]
-    # img_lab = skimage.color.rgb2lab(img_rgb)
-    # img_lab = utils.preprocess_img(img_lab, FeatureType.color_spatial)
+    imgs = utils.load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
+    img_rgb = imgs[0]
+    img_lab = skimage.color.rgb2lab(img_rgb)
+    img_lab = utils.preprocess_img(img_lab, FeatureType.color_spatial)
 
     # print(img.shape, img.T[0])
     # distances = compute_distances(img[:, 0], img)
     # print(distances)
     # print(find_peak(img_lab, 0, 7))
 
-    labels, peaks = mean_shift.mean_shift(data, r=2)
-    # labels, peaks = mean_shift.mean_shift_opt2(data, r=2, c=4)
+
+    labels, peaks = mean_shift.mean_shift_speedup2(img_lab, r=2, c=4)
     print(np.unique(labels))
-    plotclusters3D(data.T, labels, peaks)
+    plotclusters3D(img_lab.T, labels, peaks)
     print("Finished, cheers!")
 
     # # Image segmentation
