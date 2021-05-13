@@ -15,7 +15,10 @@ class FeatureType(Enum):
     color_spatial = 1     # uses color and spatial information
 
 
-def image_segmentation(img, r, c, feature_type):
+def image_segmentation(img_rgb, r, c, feature_type):
+    # cluster the image data in CIELAB color space by first converting the RGB color vectors to CIELAB using
+    # color.rgb2lab(img)
+    # then convert the resulting cluster centers back to RGB using color.lab2rgb()
     """
 
 
@@ -28,41 +31,45 @@ def image_segmentation(img, r, c, feature_type):
     -------
 
     """
+    img_lab = skimage.color.rgb2lab(img_rgb)
+    img_lab = utils.retrieve_features(img_lab, FeatureType.color_spatial)
+    labels, peaks = mean_shift.mean_shift_speedup2(img_lab, r=2, c=4)
 
-    # cluster the image data in CIELAB color space by first converting the RGB color vectors to CIELAB using
-    # color.rgb2lab(img)
-    # then convert the resulting cluster centers back to RGB using color.lab2rgb()
+    print(np.unique(labels))
+    plotclusters3D(img_lab.T, labels, peaks)
+
+    # utils.retrieve_cluster_centers()
     pass
 
 
+def test_mean_shift(path):
+    data = utils.load_test_data(path)
+    print("data shape: ", data.shape)
+
+    labels, peaks = mean_shift.mean_shift(data, r=2)
+    print("mean shift - # cluster: ", np.unique(labels))
+    plotclusters3D(data.T, labels, peaks)
+
+    labels, peaks = mean_shift.mean_shift_speedup1(data, r=2, c=4)
+    print("1. speedup - # cluster: ", np.unique(labels))
+    plotclusters3D(data.T, labels, peaks)
+
+    labels, peaks = mean_shift.mean_shift_speedup2(data, r=2, c=4)
+    print("2. speedup - # cluster: ", np.unique(labels))
+    plotclusters3D(data.T, labels, peaks)
+
+
 if __name__ == '__main__':
-    # data = utils.load_data("data/pts.mat")
-    # print(data.shape)
-    # labels, peaks = mean_shift.mean_shift(data, r=2)
-    # labels, peaks = mean_shift.mean_shift_speedup1(data, r=2, c=4)
-    # labels, peaks = mean_shift.mean_shift_speedup2(data, r=2, c=4)
-    # print(np.unique(labels))
-    # plotclusters3D(data.T, labels, peaks)
+    # test_mean_shift(path="data/pts.mat")
 
     imgs = utils.load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
     img_rgb = imgs[0]
-    img_lab = skimage.color.rgb2lab(img_rgb)
-    img_lab = utils.preprocess_img(img_lab, FeatureType.color_spatial)
 
-    # print(img.shape, img.T[0])
-    # distances = compute_distances(img[:, 0], img)
-    # print(distances)
-    # print(find_peak(img_lab, 0, 7))
+    # Image segmentation
+    r = 2
+    c = 4
+    feature_type = FeatureType.color  # color, color_spatial
+    image_segmentation(img_rgb, r, c, feature_type)
 
-
-    labels, peaks = mean_shift.mean_shift_speedup2(img_lab, r=2, c=4)
-    print(np.unique(labels))
-    plotclusters3D(img_lab.T, labels, peaks)
     print("Finished, cheers!")
-
-    # # Image segmentation
-    # r = 30
-    # c = 4.5
-    # feature_type = FeatureType.color_spatial
-    # image_segmentation(img_rgb, r, c, feature_type)
 

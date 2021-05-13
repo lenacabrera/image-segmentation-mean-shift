@@ -1,7 +1,8 @@
 import scipy.io
-import numpy as np
 from scipy.spatial import distance
+import numpy as np
 from numba import njit
+from tqdm import tqdm
 
 
 def mean_shift(data, r):
@@ -28,7 +29,6 @@ def mean_shift(data, r):
     unique_labels = 0
 
     for idx in range(n_data_points):
-        print("idx: ", idx)
         peak, _ = find_peak(data, idx, r, threshold=0.01)
 
         # check if similar peak already found previously
@@ -70,8 +70,7 @@ def mean_shift_speedup1(data, r, c):
     n_data_points = data.shape[1]
     unique_labels = 0
 
-    for idx in range(n_data_points):
-        print("idx: ", idx)
+    for idx in tqdm(range(n_data_points)):
         peak, window_indices = find_peak(data, idx, r, threshold=0.01)
 
         # check if similar peak already found previously
@@ -114,8 +113,7 @@ def mean_shift_speedup2(data, r, c):
     n_data_points = data.shape[1]
     unique_labels = 0
 
-    for idx in range(n_data_points):
-        print("idx: ", idx)
+    for idx in tqdm(range(n_data_points)):
         peak, cpts = find_peak_opt(data, idx, r, threshold=0.01, c=c)
         # retrieve indices of points at distance r/c of search path
         indices = np.argwhere(cpts == 1)
@@ -211,9 +209,12 @@ def find_peak_opt(data, idx, r, threshold, c=4):
         # retrieve points in window, current data point excluded
         window_indices = np.argwhere(distances <= r).flatten()
         window_indices = window_indices[window_indices != idx]
-        neighbors = data.T[window_indices]
-        # compute peak of window
-        peak = np.mean(neighbors, axis=0)
+        if window_indices.size > 0:
+            neighbors = data.T[window_indices]
+            # compute peak of window
+            peak = np.mean(neighbors, axis=0)
+        else:
+            peak = data_point
         # compare peak to previous peak
         difference_peaks = np.abs(peak - data_point)
         # shift window to mean

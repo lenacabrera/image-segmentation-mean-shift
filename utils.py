@@ -4,7 +4,7 @@ import numpy as np
 from main import FeatureType
 
 
-def load_data(path):
+def load_test_data(path):
     """ Loads the data """
     data = scipy.io.loadmat(path)["data"]
     return data
@@ -18,7 +18,7 @@ def load_images(dir, filenames):
     return images
 
 
-def preprocess_img(img, feature_type):
+def retrieve_features(img, feature_type):
     """
     - create 3-by-p matrix in case you use color feature_type, where p is the number of pixels in the input image
     - if we want to include spatial position information as well, define the feature vector as a 5D vector specifying
@@ -30,12 +30,6 @@ def preprocess_img(img, feature_type):
     -------
 
     """
-    img = reshape_img(img, feature_type)
-    return img
-
-
-def reshape_img(img, feature_type):
-
     if feature_type.value == FeatureType.color.value:
         image = img.reshape((img.shape[2], img.shape[0] * img.shape[1]))
     if feature_type.value == FeatureType.color_spatial.value:
