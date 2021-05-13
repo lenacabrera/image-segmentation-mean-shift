@@ -18,10 +18,12 @@ def plotclusters3D(data, labels, peaks):
     bgr_peaks = np.array(peaks[:, 0:3], dtype=float)
     rgb_peaks = bgr_peaks[...,::-1]
     rgb_peaks /= 255.0
+    rgb_peaks = np.array(peaks[:, 0:3], dtype=float)
     for idx, peak in enumerate(rgb_peaks):
         color = np.random.uniform(0, 1, 3)
         #TODO: instead of random color, you can use peaks when you work on actual images
         # color = peak
         cluster = data[np.where(labels == idx)[0]].T
         ax.scatter(cluster[0], cluster[1], cluster[2], c=[color], s=.5)
+    plt.savefig("clusters3D.png")
     fig.show()
