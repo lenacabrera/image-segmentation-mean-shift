@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plotclusters3D(data, labels, peaks):
+def plotclusters3D(data, labels, peaks, rand_color=True):
     """
     Plots the modes of the given image data in 3D by coloring each pixel
     according to its corresponding peak.
@@ -16,13 +16,15 @@ def plotclusters3D(data, labels, peaks):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     bgr_peaks = np.array(peaks[:, 0:3], dtype=float)
-    rgb_peaks = bgr_peaks[...,::-1]
+    rgb_peaks = bgr_peaks[..., ::-1]
     rgb_peaks /= 255.0
     rgb_peaks = np.array(peaks[:, 0:3], dtype=float)
     for idx, peak in enumerate(rgb_peaks):
-        color = np.random.uniform(0, 1, 3)
-        #TODO: instead of random color, you can use peaks when you work on actual images
-        # color = peak
+        if rand_color:
+            color = np.random.uniform(0, 1, 3)
+        else:
+            # TODO: instead of random color, you can use peaks when you work on actual images
+            color = peak
         cluster = data[np.where(labels == idx)[0]].T
         ax.scatter(cluster[0], cluster[1], cluster[2], c=[color], s=.5)
     plt.savefig("clusters3D.png")
