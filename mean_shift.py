@@ -31,7 +31,7 @@ def ms_no_speedup(data, r):
     unique_labels = 1
 
     # remaining data points
-    for idx in tqdm(range(1, n_data_points)):
+    for idx in tqdm(range(n_data_points)):
         peak, _ = find_peak(data, idx, r, threshold=0.01)
         peaks[idx] = peak
 
@@ -91,7 +91,7 @@ def ms_speedup1(data, r):
     unique_labels = 1
 
     # remaining data points
-    for idx in tqdm(range(1, n_data_points)):
+    for idx in tqdm(range(n_data_points)):
         peak, window_indices = find_peak(data, idx, r, threshold=0.01)
         peaks[idx] = peak
 
@@ -154,7 +154,7 @@ def ms_speedup2(data, r, c):
     unique_labels = 1
 
     # remaining data points
-    for idx in tqdm(range(1, n_data_points)):
+    for idx in tqdm(range(n_data_points)):
         peak, cpts = find_peak_opt(data, idx, r, threshold=0.01, c=c)
         peaks[idx] = peak
 

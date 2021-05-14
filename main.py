@@ -70,15 +70,15 @@ def test_mean_shift():
 
     labels, peaks = mean_shift.ms_no_speedup(data, r=2)
     print("mean shift - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks)
+    plotclusters3D(data.T, labels, peaks.T)
 
     labels, peaks = mean_shift.ms_speedup1(data, r=2)
     print("1. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks)
+    plotclusters3D(data.T, labels, peaks.T)
 
     labels, peaks = mean_shift.ms_speedup2(data, r=2, c=4)
     print("2. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks)
+    plotclusters3D(data.T, labels, peaks.T)
 
 
 if __name__ == '__main__':
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     r = 20
     c = 4
     feature_type = FeatureType.color  # color, color_spatial
-    image_segmentation(img_rgb, r, c, feature_type)
+    # image_segmentation(img_rgb, r, c, feature_type)
 
     print("Finished image segmentation")
 

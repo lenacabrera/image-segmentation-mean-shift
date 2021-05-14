@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plotclusters3D(data, labels, peaks, rand_color=True, path="clusters3D.png"):
+def plotclusters3D(data, labels, peaks, rand_color=True, path="1.png"):
     """
     Plots the modes of the given image data in 3D by coloring each pixel according to its corresponding peak.
 
