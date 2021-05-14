@@ -4,14 +4,37 @@ import numpy as np
 from main import FeatureType
 
 
-def load_test_data(path):
-    """ Loads the data """
+def load_test_data(path="data/pts.mat"):
+    """
+    Loads test data which stores a set of 3D points belonging to two 3D Gaussians.
+
+    Parameters
+    ----------
+    path : path to data file
+
+    Returns
+    -------
+    data : data with shape [3]x[2000]
+
+    """
     data = scipy.io.loadmat(path)["data"]
     return data
 
 
-def load_images(dir, filenames):
-    print("Load image ...")
+def load_images(filenames, dir='./img/'):
+    """
+    Loads images specified by their filenames
+
+    Parameters
+    ----------
+    filenames : list of names of image files
+    dir : image directory
+
+    Returns
+    -------
+    images : list of images as arrays
+
+    """
     images = []
     for filename in filenames:
         images.append(plt.imread(dir + filename, 0))
@@ -20,15 +43,13 @@ def load_images(dir, filenames):
 
 def retrieve_features(img, feature_type):
     """
-    - create 3-by-p matrix in case you use color feature_type, where p is the number of pixels in the input image
-    - if we want to include spatial position information as well, define the feature vector as a 5D vector specifying
-      the color channels and x, y coordinates of each pixel
-    - use python functions to convert between color spaces
-    - avoid using loops whenever possible!
+    Preprocesses image data and extracts features for each pixel. One of two types of features is used:
+    (1) CIELAB color space, with 3 color channels (3D feature vector)
+    (2) CIELAB color space + spatial information, with 3 color channels and 2 coordinates (5D feature vector)
 
     Returns
     -------
-
+    image : extracted image features as array with shape [3]x[#pixels] or [5]x[#pixels]
     """
     if feature_type.value == FeatureType.color.value:
         image = img.reshape((img.shape[2], img.shape[0] * img.shape[1]))

@@ -1,7 +1,7 @@
 from enum import Enum
 import numpy as np
 import matplotlib.pyplot as plt
-import skimage.color
+from skimage.color import rgb2lab, lab2rgb
 import utils
 import mean_shift
 from plotclusters3D import plotclusters3D
@@ -16,61 +16,75 @@ class FeatureType(Enum):
 
 
 def image_segmentation(img_rgb, r, c, feature_type):
-    # cluster the image data in CIELAB color space by first converting the RGB color vectors to CIELAB using
-    # color.rgb2lab(img)
-    # then convert the resulting cluster centers back to RGB using color.lab2rgb()
     """
-
+    Performs image segmentation using mean-shift algorithm, i.e. partitioning an image into multiple segments of similar
+    pixels. Converts an RGB image into CIELAB color space, as euclidean distances (used in the mean-shift procedure) in
+    CIELAB color space correlate better with color changes perceived by the human eye. Retrieves features from converted
+    image data. One of two types of features is used:
+    (1) CIELAB color space (3D feature vector)
+    (2) CIELAB color space + spatial information / coordinates (5D feature vector)
+    Lastly, reshapes the segmented image to original image shape and converts it back to RGB color space.
 
     Parameters
     ----------
-    img : input color RGB image
-    r : radius
+    img_rgb : image with shape [width]x[height]x[3]
+    r : radius of shifting window in mean-shift procedure
+    c : constant used for second speedup of mean-shift
+    feature_type : FeatureType enumeration specifying the types of features to include in segmentation process
 
     Returns
     -------
 
     """
-    # show original image
-    plt.imshow(img_rgb)
-    plt.show()
     # preprocess image
-    img_lab = skimage.color.rgb2lab(img_rgb)
+    img_lab = rgb2lab(img_rgb)
     img_lab = utils.retrieve_features(img_lab, feature_type)
     # perform image segmentation using mean shift algorithm
     labels, peaks = mean_shift.ms_speedup2(img_lab, r, c)
-    # plot clusters
-    plotclusters3D(img_lab.T, labels, peaks)
     # postprocess segmentation data
-    segments = dict(zip(np.unique(labels), np.flip(peaks, axis=0)))
+    labels = labels - 1
+    segments = dict(zip(np.unique(labels), peaks))
     segmented = np.array([segments[l] if l in segments.keys() else l for l in labels])
-    img_rgb_seg = skimage.color.lab2rgb(segmented.reshape(img_rgb.shape))
-    # show segmented image
-    plt.imshow(img_rgb_seg)
+    img_seg_lab = np.reshape(segmented[:, :3], img_rgb.shape)
+    img_rgb_seg = lab2rgb(img_seg_lab)
+    # plot clusters
+    peaks = np.flip(peaks, axis=1)
+    plotclusters3D(img_lab.T, labels, peaks, rand_color=True)
+    # show original and segmented image
+    fig, ax = plt.subplots(2, 1, sharex=True, sharey=False)
+    ax[0].imshow(img_rgb)
+    ax[1].imshow(img_rgb_seg)
     plt.show()
 
 
-def test_mean_shift(path):
-    data = utils.load_test_data(path)
+def test_mean_shift():
+    """
+    Applies mean-shift algorithm to test data and plots found clusters/segments.
+
+    Returns
+    -------
+
+    """
+    data = utils.load_test_data()
     print("data shape: ", data.shape)
 
     labels, peaks = mean_shift.ms_no_speedup(data, r=2)
-    print("mean shift - # cluster: %s, peaks: %s" % (np.unique(labels), peaks))
+    print("mean shift - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks)
 
     labels, peaks = mean_shift.ms_speedup1(data, r=2)
-    print("1. speedup - # cluster: %s, peaks: %s" % (np.unique(labels), peaks))
+    print("1. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks)
 
     labels, peaks = mean_shift.ms_speedup2(data, r=2, c=4)
-    print("2. speedup - # cluster: %s, peaks: %s" % (np.unique(labels), peaks))
+    print("2. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks)
 
 
 if __name__ == '__main__':
-    # test_mean_shift(path="data/pts.mat")
+    test_mean_shift()
 
-    imgs = utils.load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
+    imgs = utils.load_images(filenames=["deer10.png", "181091.jpg", "368078.jpg"])
     img_rgb = imgs[0]
 
     # Image segmentation
@@ -79,5 +93,5 @@ if __name__ == '__main__':
     feature_type = FeatureType.color  # color, color_spatial
     image_segmentation(img_rgb, r, c, feature_type)
 
-    print("Finished, cheers!")
+    print("Finished image segmentation")
 

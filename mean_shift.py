@@ -4,7 +4,24 @@ from tqdm import tqdm
 
 
 def ms_no_speedup(data, r):
+    """
+    Performs the mean-shift algorithm to cluster pixel of in an image.
+    Calls find_peak for each point and then assigns a label to each point according to its associated peak. Compares
+    peaks after each call of find_peak and merges similar peaks. Two peaks are considered to be the similar if the
+    distance between them is smaller than r/2. If the peak of a data point already exists then its computed peak is
+    discarded and it is given the label of the associated peak in peaks.
 
+    Parameters
+    ----------
+    data : pixel matrix with shape [#features]x[#pixels]
+    r : radius of shifting spherical window
+
+    Returns
+    -------
+    labels : cluster vector with a label for each pixel with shape [#pixels]
+    peaks : peaks in density dist. / cluster centers found during mean-shift procedure, shape [#clusters]x[#features]
+
+    """
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
@@ -41,7 +58,30 @@ def ms_no_speedup(data, r):
 
 
 def ms_speedup1(data, r):
+    """
+    First speedup of mean-shift procedure: "Basin of attraction"
+    Upon finding a peak, associates each data point that is at a distance <= r from the peak with the cluster defined by
+    that peak. Based on the intuition that points that are within one window size distance from the peak will with high
+    probability converge to that peak.
 
+    Otherwise same as ms_no_speedup:
+    Performs the mean-shift algorithm to cluster pixel of in an image.
+    Calls find_peak for each point and then assigns a label to each point according to its associated peak. Compares
+    peaks after each call of find_peak and merges similar peaks. Two peaks are considered to be the similar if the
+    distance between them is smaller than r/2. If the peak of a data point already exists then its computed peak is
+    discarded and it is given the label of the associated peak in peaks.
+
+    Parameters
+    ----------
+    data : pixel matrix with shape [#features]x[#pixels]
+    r : radius of shifting spherical window
+
+    Returns
+    -------
+    labels : cluster vector with a label for each pixel with shape [#pixels]
+    peaks : peaks in density dist. / cluster centers found during mean-shift procedure, shape [#clusters]x[#features]
+
+    """
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
@@ -81,7 +121,30 @@ def ms_speedup1(data, r):
 
 
 def ms_speedup2(data, r, c):
+    """
+    Second speedup of mean-shift procedure:
+    Points within a distance r/c of the search path are associated with the converged peak, where c is some constant
+    value. These points are retrieved during a call of find_peak_opt.
 
+    Otherwise same as ms_no_speedup:
+    Performs the mean-shift algorithm to cluster pixel of in an image.
+    Calls find_peak for each point and then assigns a label to each point according to its associated peak. Compares
+    peaks after each call of find_peak and merges similar peaks. Two peaks are considered to be the similar if the
+    distance between them is smaller than r/2. If the peak of a data point already exists then its computed peak is
+    discarded and it is given the label of the associated peak in peaks.
+
+    Parameters
+    ----------
+    data : pixel matrix with shape [#features]x[#pixels]
+    r : radius of shifting spherical window
+    c : constant
+
+    Returns
+    -------
+    labels : cluster vector with a label for each pixel with shape [#pixels]
+    peaks : peaks in density dist. / cluster centers found during mean-shift procedure, shape [#clusters]x[#features]
+
+    """
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
@@ -122,7 +185,7 @@ def ms_speedup2(data, r, c):
 
 def find_peak(data, idx, r, threshold):
     """
-    Compute density peak for point p whose column index is provided.
+    Computes density peak associated with a point whose column index is provided.
 
     Parameters
     ----------
@@ -132,9 +195,10 @@ def find_peak(data, idx, r, threshold):
 
     Returns
     -------
+    peak : vector of converged peak with shape [#features]
+    window_indices : indices vector of points within converged window
 
     """
-
     # retrieve data point
     data_point = data[:, idx]
     center = data_point
@@ -160,24 +224,23 @@ def find_peak(data, idx, r, threshold):
 
 def find_peak_opt(data, idx, r, threshold, c=4):
     """
-    Second speedup:
-    Associates points that are within a distance of r/c of the search path with the converged peak
+    Computes density peak associated with a point whose column index is provided with speedup:
+    associates points that are within a distance of r/c of the search path with the converged peak.
 
     Parameters
     ----------
     data : n-dimensional dataset
     idx : column index of data point
     r : search window radius
-    threshold :
+    threshold : threshold
     c : constant value
 
     Returns
     -------
-    peaks :
-    cpts : vector storing 1 for each point that is a distance of r/c from the path and 0 otherwise
+    peak : vector of converged peak with shape [#features]
+    cpts : vector storing 1 for points within a distance of r/c of search path with the converged peak, shape [#pixels]
 
     """
-
     # retrieve data point
     data_point = data[:, idx]
     center = data_point
@@ -206,16 +269,17 @@ def find_peak_opt(data, idx, r, threshold, c=4):
 
 def compute_distances(data_point, data, metric='euclidean'):
     """
-    Computes the distances between a data point and all other data points.
+    Computes the euclidean distances between a data point and a set of data points.
 
     Parameters
     ----------
-    data_point :
-    data :
-    metric :
+    data_point : pixel
+    data : n pixels
+    metric : distance metric
 
     Returns
     -------
+    distances : vector of distances with shape [n pixels]
 
     """
     distances = np.array([euclidean_distance(data_point.reshape(1, -1), p.reshape(1, -1)) for p in data])
@@ -224,4 +288,17 @@ def compute_distances(data_point, data, metric='euclidean'):
 
 @njit
 def euclidean_distance(x, y) -> np.float32:
+    """
+    Computes the euclidean distance between two vectors, here pixels.
+
+    Parameters
+    ----------
+    x : pixel vector
+    y : pixel vector
+
+    Returns
+    -------
+    float : euclidean distance between x an y
+
+    """
     return np.linalg.norm(x-y)
