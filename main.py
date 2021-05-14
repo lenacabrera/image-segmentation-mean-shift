@@ -46,21 +46,25 @@ def test_mean_shift(path):
     data = utils.load_test_data(path)
     print("data shape: ", data.shape)
 
-    labels, peaks = mean_shift.mean_shift(data, r=2)
+    labels, peaks = mean_shift.mean_shift_new(data, r=2)
     print("mean shift - # cluster: ", np.unique(labels))
     plotclusters3D(data.T, labels, peaks)
 
-    labels, peaks = mean_shift.mean_shift_speedup1(data, r=2, c=4)
-    print("1. speedup - # cluster: ", np.unique(labels))
-    plotclusters3D(data.T, labels, peaks)
+    # labels, peaks = mean_shift.mean_shift(data, r=2)
+    # print("mean shift - # cluster: ", np.unique(labels))
+    # plotclusters3D(data.T, labels, peaks)
+    #
+    # labels, peaks = mean_shift.mean_shift_speedup1(data, r=2)
+    # print("1. speedup - # cluster: ", np.unique(labels))
+    # plotclusters3D(data.T, labels, peaks)
 
-    labels, peaks = mean_shift.mean_shift_speedup2(data, r=2, c=4)
-    print("2. speedup - # cluster: ", np.unique(labels))
-    plotclusters3D(data.T, labels, peaks)
+    # labels, peaks = mean_shift.mean_shift_speedup2(data, r=2, c=4)
+    # print("2. speedup - # cluster: ", np.unique(labels))
+    # plotclusters3D(data.T, labels, peaks)
 
 
 if __name__ == '__main__':
-    # test_mean_shift(path="data/pts.mat")
+    test_mean_shift(path="data/pts.mat")
 
     imgs = utils.load_images(dir='./img/', filenames=["deer10.png", "181091.jpg", "368078.jpg"])
     img_rgb = imgs[0]
@@ -69,7 +73,7 @@ if __name__ == '__main__':
     r = 2
     c = 4
     feature_type = FeatureType.color  # color, color_spatial
-    image_segmentation(img_rgb, r, c, feature_type)
+    # image_segmentation(img_rgb, r, c, feature_type)
 
     print("Finished, cheers!")
 
