@@ -28,7 +28,7 @@ def ms_no_speedup(data, r):
     peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
 
-    label_indices = np.zeros((1,), dtype=np.int)
+    peak_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
     # first data point
@@ -45,7 +45,7 @@ def ms_no_speedup(data, r):
         indices = np.argwhere(compute_distances(peak, peaks) < r/2).flatten()
         if indices.size > 0:
             # assign same label for similar peaks
-            labels[idx] = labels[label_indices[indices[0]]]
+            labels[idx] = labels[peak_indices[indices[0]]]
             # labels[indices] = labels[idx]
         if labels[idx] == 0:
             # assign new label for new peaks
@@ -54,7 +54,7 @@ def ms_no_speedup(data, r):
             # store new peak
             peaks = np.append(peaks, np.array([peak]), axis=0)
             # store index of new labeled peak
-            label_indices = np.append(label_indices, idx)
+            peak_indices = np.append(peak_indices, idx)
 
     return labels, peaks
 
@@ -90,7 +90,7 @@ def ms_speedup1(data, r):
     peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
 
-    label_indices = np.zeros((1,), dtype=np.int)
+    peak_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
     # first data point
@@ -109,20 +109,24 @@ def ms_speedup1(data, r):
             indices = np.argwhere(compute_distances(peak, peaks) < r/2).flatten()
             if indices.size > 0:
                 # assign same label for similar peaks
-                labels[idx] = labels[label_indices[indices[0]]]
+                labels[idx] = labels[peak_indices[indices[0]]]
                 # labels[indices] = labels[idx]
-                # assign points withing current point's window the same label
+                # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
             if labels[idx] == 0:
                 # assign new label for new peaks
                 labels[idx] = unique_labels
-                # assign points withing current point's window the same label
+                # assign points within current point's window the same label
                 labels[window_indices] = unique_labels
                 unique_labels += 1
                 # store new peak
                 peaks = np.append(peaks, np.array([peak]), axis=0)
                 # store index of new labeled peak
-                label_indices = np.append(label_indices, idx)
+                peak_indices = np.append(peak_indices, idx)
+
+    peaks = peaks[np.unique(labels) - 1]
+    clusters = dict(zip(np.unique(labels), range(np.unique(labels).size)))
+    labels = np.array([clusters[l] if l in clusters.keys() else l for l in labels])
 
     return labels, peaks
 
@@ -158,7 +162,7 @@ def ms_speedup2(data, r, c):
     peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
 
-    label_indices = np.zeros((1,), dtype=np.int)
+    peak_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
     # first data point
@@ -178,16 +182,16 @@ def ms_speedup2(data, r, c):
             indices = np.argwhere(compute_distances(peak, peaks) < r / 2).flatten()
             if indices.size > 0:
                 # assign same label for similar peaks
-                labels[idx] = labels[label_indices[indices[0]]]
-                # labels[indices] = labels[idx]
-                # assign points withing current point's window the same label
+                labels[idx] = labels[peak_indices[indices[0]]]
+                labels[indices] = labels[idx]
+                # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
                 # assign points within r/d distance of search path the same label
                 labels[path_indices] = labels[idx]
-            if labels[idx] == 0:
+            else:
                 # assign new label for new peaks
                 labels[idx] = unique_labels
-                # assign points withing current point's window the same label
+                # assign points within current point's window the same label
                 labels[window_indices] = unique_labels
                 # assign points within r/d distance of search path the same label
                 labels[path_indices] = unique_labels
@@ -195,7 +199,11 @@ def ms_speedup2(data, r, c):
                 # store new peak
                 peaks = np.append(peaks, np.array([peak]), axis=0)
                 # store index of new labeled peak
-                label_indices = np.append(label_indices, idx)
+                peak_indices = np.append(peak_indices, idx)
+
+    peaks = peaks[np.unique(labels) - 1]
+    clusters = dict(zip(np.unique(labels), range(np.unique(labels).size)))
+    labels = np.array([clusters[l] if l in clusters.keys() else l for l in labels])
 
     return labels, peaks
 
@@ -254,6 +262,7 @@ def find_peak_opt(data, idx, r, threshold, c=4):
     Returns
     -------
     peak : vector of converged peak with shape [#features]
+    window_indices : indices vector of points within converged window
     cpts : vector storing 1 for points within a distance of r/c of search path with the converged peak, shape [#pixels]
 
     """

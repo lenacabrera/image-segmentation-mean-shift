@@ -27,7 +27,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
 
     Parameters
     ----------
-    img_rgb : image with shape [width]x[height]x[3]
+    img_rgb : image with shape [height]x[width]x[3]
     r : radius of shifting window in mean-shift procedure
     c : constant used for second speedup of mean-shift
     feature_type : FeatureType enumeration specifying the types of features to include in segmentation process
@@ -36,21 +36,23 @@ def image_segmentation(img_rgb, r, c, feature_type):
     -------
 
     """
+    # TODO smaller part of image for testing
+    # img_rgb = img_rgb[-64:-32, 70:102, :]
+
     # preprocess image
     img_lab = rgb2lab(img_rgb)
     img_lab = utils.retrieve_features(img_lab, feature_type)
     # perform image segmentation using mean shift algorithm
-    labels, peaks = mean_shift.ms_speedup2(img_lab, r, c)
-    # labels, peaks = mean_shift.ms_no_speedup(img_lab, r)
+    labels, peaks = mean_shift.ms_no_speedup(img_lab, r)
     # postprocess segmentation data
-    labels = labels - 1
     segments = dict(zip(np.unique(labels), peaks))
     segmented = np.array([segments[l] if l in segments.keys() else l for l in labels])
     img_seg_lab = np.reshape(segmented[:, :3], img_rgb.shape)
     img_rgb_seg = lab2rgb(img_seg_lab)
+    print("Found %s clusters." % len(segments))
     # plot clusters
-    peaks = np.flip(peaks, axis=1)
-    plotclusters3D(img_lab.T, labels, peaks.T, rand_color=True)
+    bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
+    plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
     # show original and segmented image
     fig, ax = plt.subplots(2, 1, sharex=True, sharey=False)
     ax[0].imshow(img_rgb)
@@ -86,16 +88,15 @@ def test_mean_shift():
 
 
 if __name__ == '__main__':
-    test_mean_shift()
+    # test_mean_shift()
 
     imgs = utils.load_images(filenames=["deer10.png", "181091.jpg", "368078.jpg"])
     img_rgb = imgs[0]
 
     # Image segmentation
-    r = 20
+    r = 10
     c = 4
     feature_type = FeatureType.color  # color, color_spatial
-    # image_segmentation(img_rgb, r, c, feature_type)
+    image_segmentation(img_rgb, r, c, feature_type)
 
-    print("Finished image segmentation")
-
+    print("Mission accomplished.")

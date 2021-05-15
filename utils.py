@@ -52,11 +52,11 @@ def retrieve_features(img, feature_type):
     image : extracted image features as array with shape [3]x[#pixels] or [5]x[#pixels]
     """
     if feature_type.value == FeatureType.color.value:
-        image = img.reshape((img.shape[2], img.shape[0] * img.shape[1]))
+        image = img.reshape(img.shape[0] * img.shape[1], img.shape[2])
     if feature_type.value == FeatureType.color_spatial.value:
         x = np.array(list(range(img.shape[0])))
         y = np.array(list(range(img.shape[1])))
         coordinates = np.array(np.meshgrid(x, y))
         image = np.append(img, coordinates.T, axis=2)
-        image = image.reshape((image.shape[2], image.shape[0] * image.shape[1]))
-    return image
+        image = image.reshape(img.shape[0] * img.shape[1], img.shape[2])
+    return image.T
