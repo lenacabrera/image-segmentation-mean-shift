@@ -41,6 +41,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_lab = utils.retrieve_features(img_lab, feature_type)
     # perform image segmentation using mean shift algorithm
     labels, peaks = mean_shift.ms_speedup2(img_lab, r, c)
+    # labels, peaks = mean_shift.ms_no_speedup(img_lab, r)
     # postprocess segmentation data
     labels = labels - 1
     segments = dict(zip(np.unique(labels), peaks))
@@ -49,7 +50,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_rgb_seg = lab2rgb(img_seg_lab)
     # plot clusters
     peaks = np.flip(peaks, axis=1)
-    plotclusters3D(img_lab.T, labels, peaks, rand_color=True)
+    plotclusters3D(img_lab.T, labels, peaks.T, rand_color=True)
     # show original and segmented image
     fig, ax = plt.subplots(2, 1, sharex=True, sharey=False)
     ax[0].imshow(img_rgb)
@@ -68,16 +69,19 @@ def test_mean_shift():
     data = utils.load_test_data()
     print("data shape: ", data.shape)
 
+    print("Mean shift with no speedup...")
     labels, peaks = mean_shift.ms_no_speedup(data, r=2)
-    print("mean shift - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
+    print("mean shift - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks.T)
 
+    print("Mean shift with 1. speedup...")
     labels, peaks = mean_shift.ms_speedup1(data, r=2)
-    print("1. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
+    print("1. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks.T)
 
+    print("Mean shift with 2. speedup...")
     labels, peaks = mean_shift.ms_speedup2(data, r=2, c=4)
-    print("2. speedup - # cluster: %s, peaks: %s" % (np.unique(labels).size, peaks))
+    print("2. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
     plotclusters3D(data.T, labels, peaks.T)
 
 

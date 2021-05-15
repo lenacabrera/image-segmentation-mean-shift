@@ -25,36 +25,38 @@ def ms_no_speedup(data, r):
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
+    peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
-    peaks = np.zeros((n_data_points, n_features))
 
+    label_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
+    # first data point
+    peak, _ = find_peak(data, 0, r, threshold=0.01)
+    peaks[0, :] = peak
+    labels[0] = unique_labels
+    unique_labels += 1
+
     # remaining data points
-    for idx in tqdm(range(n_data_points)):
+    for idx in tqdm(range(1, n_data_points)):
         peak, _ = find_peak(data, idx, r, threshold=0.01)
-        peaks[idx] = peak
 
+        # check for similar peaks
+        indices = np.argwhere(compute_distances(peak, peaks) < r/2).flatten()
+        if indices.size > 0:
+            # assign same label for similar peaks
+            labels[idx] = labels[label_indices[indices[0]]]
+            labels[indices] = labels[label_indices[indices[0]]]
         if labels[idx] == 0:
-            # check for similar peaks
-            indices = np.argwhere(compute_distances(peak, peaks[:idx]) < r/2).flatten()
-            if indices.size > 0:
-                # assign same label for similar peaks
-                labels[idx] = labels[indices[0]]
-                for i in indices:
-                    labels[i] = labels[indices[0]]
-            else:
-                # assign new label for new peaks
-                labels[idx] = unique_labels
-                unique_labels += 1
+            # assign new label for new peaks
+            labels[idx] = unique_labels
+            unique_labels += 1
+            # store new peak
+            peaks = np.append(peaks, np.array([peak]), axis=0)
+            # store index of new labeled peak
+            label_indices = np.append(label_indices, idx)
 
-    # merge peaks associated to the same cluster
-    peaks_merged = np.zeros((np.unique(labels).size, n_features))
-    for i, label in enumerate(np.unique(labels)):
-        idx = np.argwhere(labels == label)[0]
-        peaks_merged[i] = peaks[idx]
-
-    return labels, peaks_merged
+    return labels, peaks
 
 
 def ms_speedup1(data, r):
@@ -85,39 +87,44 @@ def ms_speedup1(data, r):
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
+    peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
-    peaks = np.zeros((n_data_points, n_features))
 
+    label_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
+    # first data point
+    peak, _ = find_peak(data, 0, r, threshold=0.01)
+    peaks[0, :] = peak
+    labels[0] = unique_labels
+    unique_labels += 1
+
     # remaining data points
-    for idx in tqdm(range(n_data_points)):
-        peak, window_indices = find_peak(data, idx, r, threshold=0.01)
-        peaks[idx] = peak
+    for idx in tqdm(range(1, n_data_points)):
 
         if labels[idx] == 0:
+            peak, window_indices = find_peak(data, idx, r, threshold=0.01)
+
             # check for similar peaks
-            indices = np.argwhere(compute_distances(peak, peaks[:idx]) < r/2).flatten()
+            indices = np.argwhere(compute_distances(peak, peaks) < r/2).flatten()
             if indices.size > 0:
                 # assign same label for similar peaks
-                labels[idx] = labels[indices[0]]
-                for i in indices:
-                    labels[i] = labels[indices[0]]
-            else:
+                labels[idx] = labels[label_indices[indices[0]]]
+                labels[indices] = labels[idx]
+                # assign points withing current point's window the same label
+                labels[window_indices] = labels[idx]
+            if labels[idx] == 0:
                 # assign new label for new peaks
                 labels[idx] = unique_labels
+                # assign points withing current point's window the same label
+                labels[window_indices] = unique_labels
                 unique_labels += 1
+                # store new peak
+                peaks = np.append(peaks, np.array([peak]), axis=0)
+                # store index of new labeled peak
+                label_indices = np.append(label_indices, idx)
 
-        # assign points withing current point's window the same label
-        labels[window_indices] = labels[idx]
-
-    # merge peaks associated to the same cluster
-    peaks_merged = np.zeros((np.unique(labels).size, n_features))
-    for i, label in enumerate(np.unique(labels)):
-        idx = np.argwhere(labels == label)[0]
-        peaks_merged[i] = peaks[idx]
-
-    return labels, peaks_merged
+    return labels, peaks
 
 
 def ms_speedup2(data, r, c):
@@ -148,39 +155,49 @@ def ms_speedup2(data, r, c):
     n_data_points = data.shape[1]
     n_features = data.shape[0]
 
+    peaks = np.zeros((1, n_features))
     labels = np.zeros((n_data_points,), dtype=np.int)
-    peaks = np.zeros((n_data_points, n_features))
 
+    label_indices = np.zeros((1,), dtype=np.int)
     unique_labels = 1
 
+    # first data point
+    peak, _ = find_peak(data, 0, r, threshold=0.01)
+    peaks[0, :] = peak
+    labels[0] = unique_labels
+    unique_labels += 1
+
     # remaining data points
-    for idx in tqdm(range(n_data_points)):
-        peak, cpts = find_peak_opt(data, idx, r, threshold=0.01, c=c)
-        peaks[idx] = peak
+    for idx in tqdm(range(1, n_data_points)):
 
         if labels[idx] == 0:
+            peak, window_indices, cpts = find_peak_opt(data, idx, r, threshold=0.01)
+            path_indices = np.argwhere(cpts == 1)
+
             # check for similar peaks
-            indices = np.argwhere(compute_distances(peak, peaks[:idx]) < r/2).flatten()
+            indices = np.argwhere(compute_distances(peak, peaks) < r / 2).flatten()
             if indices.size > 0:
                 # assign same label for similar peaks
-                labels[idx] = labels[indices[0]]
-                for i in indices:
-                    labels[i] = labels[indices[0]]
+                labels[idx] = labels[label_indices[indices[0]]]
+                labels[indices] = labels[idx]
+                # assign points withing current point's window the same label
+                labels[window_indices] = labels[idx]
                 # assign points within r/d distance of search path the same label
-                path_indices = np.argwhere(cpts == 1)
-                labels[path_indices] = labels[indices[0]]
-            else:
+                labels[path_indices] = labels[idx]
+            if labels[idx] == 0:
                 # assign new label for new peaks
                 labels[idx] = unique_labels
+                # assign points withing current point's window the same label
+                labels[window_indices] = unique_labels
+                # assign points within r/d distance of search path the same label
+                labels[path_indices] = unique_labels
                 unique_labels += 1
+                # store new peak
+                peaks = np.append(peaks, np.array([peak]), axis=0)
+                # store index of new labeled peak
+                label_indices = np.append(label_indices, idx)
 
-    # merge peaks associated to the same cluster
-    peaks_merged = np.zeros((np.unique(labels).size, n_features))
-    for i, label in enumerate(np.unique(labels)):
-        idx = np.argwhere(labels == label)[0]
-        peaks_merged[i] = peaks[idx]
-
-    return labels, peaks_merged
+    return labels, peaks
 
 
 def find_peak(data, idx, r, threshold):
@@ -214,7 +231,6 @@ def find_peak(data, idx, r, threshold):
         # compute peak of window
         peak = np.mean(window, axis=0)
         # compare peak to previous peak
-        # difference_peaks = np.abs(peak - center)
         difference_peaks = compute_distances(peak, center.reshape(1, -1))
         # shift window to mean
         center = peak
@@ -259,12 +275,11 @@ def find_peak_opt(data, idx, r, threshold, c=4):
         # compute peak of window
         peak = np.mean(window, axis=0)
         # compare peak to previous peak
-        # difference_peaks = np.abs(peak - center)
         difference_peaks = compute_distances(peak, center.reshape(1, -1))
         # shift window to mean
         center = peak
 
-    return peak, cpts
+    return peak, window_indices, cpts
 
 
 def compute_distances(data_point, data, metric='euclidean'):
