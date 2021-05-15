@@ -46,7 +46,7 @@ def ms_no_speedup(data, r):
         if indices.size > 0:
             # assign same label for similar peaks
             labels[idx] = labels[label_indices[indices[0]]]
-            labels[indices] = labels[label_indices[indices[0]]]
+            # labels[indices] = labels[idx]
         if labels[idx] == 0:
             # assign new label for new peaks
             labels[idx] = unique_labels
@@ -110,7 +110,7 @@ def ms_speedup1(data, r):
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[label_indices[indices[0]]]
-                labels[indices] = labels[idx]
+                # labels[indices] = labels[idx]
                 # assign points withing current point's window the same label
                 labels[window_indices] = labels[idx]
             if labels[idx] == 0:
@@ -179,7 +179,7 @@ def ms_speedup2(data, r, c):
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[label_indices[indices[0]]]
-                labels[indices] = labels[idx]
+                # labels[indices] = labels[idx]
                 # assign points withing current point's window the same label
                 labels[window_indices] = labels[idx]
                 # assign points within r/d distance of search path the same label
