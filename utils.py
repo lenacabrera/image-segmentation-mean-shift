@@ -2,7 +2,7 @@ import scipy.io
 import scipy.ndimage
 import matplotlib.pyplot as plt
 import numpy as np
-from main import FeatureType
+from main import FeatureType, Image
 
 
 def load_test_data(path="data/pts.mat"):
@@ -40,6 +40,10 @@ def load_images(filenames, dir='./img/'):
     for filename in filenames:
         images.append(plt.imread(dir + filename, 0))
     return images
+
+
+def load_image(image):
+    return plt.imread(image.value['src'], 0)
 
 
 def retrieve_features(img, feature_type):

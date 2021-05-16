@@ -6,6 +6,13 @@ import utils
 import mean_shift
 from plotclusters3D import plotclusters3D
 
+class Image(Enum):
+
+    img1 = {'src': "img/img1.jpg", 'dest':  "results/img1/"}
+    img2 = {'src': "img/img2.jpg", 'dest':  "results/img2/"}
+    img3 = {'src': "img/img3.jpg", 'dest':  "results/img3/"}
+    img4 = {'src': "img/deer10.jpg", 'dest':  "results/img4/"}
+
 
 class FeatureType(Enum):
     """
@@ -52,8 +59,8 @@ def image_segmentation(img_rgb, r, c, feature_type):
     print("Found %s clusters." % len(segments))
     # plot clusters
     bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
-    plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    return img_rgb_seg
+    fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
+    return img_rgb_seg, fig
 
 
 def test_mean_shift():
@@ -85,9 +92,11 @@ def test_mean_shift():
 
 if __name__ == '__main__':
     # test_mean_shift()
+    # imgs = utils.load_images(filenames=["deer10.png", "img1.jpg", "img3.jpg"])
+    # img_rgb = imgs[0]
 
-    imgs = utils.load_images(filenames=["deer10.png", "181091.jpg", "368078.jpg"])
-    img_rgb = imgs[0]
+    img = Image.img1
+    img_rgb = utils.load_image(img)
 
     # Preprocessing (i.e. apply filter)
     img_rgb_gauss = utils.apply_filter(img_rgb, type='gaussian')
@@ -97,10 +106,10 @@ if __name__ == '__main__':
     plt.show()
 
     # Image segmentation
-    r = 10
+    r = 12
     c = 4
     feature_type = FeatureType.color  # color, color_spatial
-    img_rgb_seg = image_segmentation(img_rgb_gauss, r, c, feature_type)
+    img_rgb_seg, cluster_fig = image_segmentation(img_rgb_gauss, r, c, feature_type)
 
     # show original and segmented image
     fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
@@ -108,5 +117,7 @@ if __name__ == '__main__':
     ax[1].imshow(img_rgb_gauss)
     ax[2].imshow(img_rgb_seg)
     plt.show()
+
+    cluster_fig.savefig(img.value['dest'] + "clusters3D.png")
 
     print("Mission accomplished.")
