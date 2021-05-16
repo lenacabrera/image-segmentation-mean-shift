@@ -6,8 +6,11 @@ import utils
 import mean_shift
 from plotclusters3D import plotclusters3D
 
-class Image(Enum):
 
+class Image(Enum):
+    """
+    Specifies the input image.
+    """
     img1 = {'src': "img/img1.jpg", 'dest3': "results/3D/img1/", 'dest5': "results/5D/img1/"}
     img2 = {'src': "img/img2.jpg", 'dest3': "results/3D/img2/", 'dest5': "results/5D/img2/"}
     img3 = {'src': "img/img3.jpg", 'dest3': "results/3D/img3/", 'dest5': "results/5D/img3/"}
@@ -20,6 +23,15 @@ class FeatureType(Enum):
     """
     color = 3             # uses only color space
     color_spatial = 5     # uses color and spatial information
+
+
+class Filter(Enum):
+    """
+    Specifies the filter to be applied to image.
+    """
+    none = 0
+    gauss = 1
+    median = 2
 
 
 def image_segmentation(img_rgb, r, c, feature_type):
@@ -60,7 +72,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     # plot clusters
     bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
     fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    return img_rgb_seg, fig
+    return img_rgb_seg, fig, len(segments)
 
 
 def test_mean_shift():
@@ -92,38 +104,44 @@ def test_mean_shift():
 
 if __name__ == '__main__':
     # test_mean_shift()
-    # imgs = utils.load_images(filenames=["deer10.png", "img1.jpg", "img3.jpg"])
-    # img_rgb = imgs[0]
 
+    # Configuration
     img = Image.img4
-    img_rgb = utils.load_image(img)
-
-    # Preprocessing (i.e. apply filter)
-    img_rgb_gauss = utils.apply_filter(img_rgb, type='gaussian')
-    img_rgb_median = utils.apply_filter(img_rgb, type='median')
-
-    plt.imshow(img_rgb_gauss)
-    plt.show()
-
-    # Image segmentation
+    feature_type = FeatureType.color  # color, color_spatial
+    fltr = Filter.none
     r = 12
     c = 4
-    feature_type = FeatureType.color  # color, color_spatial
-    img_rgb_seg, cluster_fig = image_segmentation(img_rgb_gauss, r, c, feature_type)
+
+    img_rgb = utils.load_image(img)
+
+    img_rgb_f = img_rgb
+    if fltr.name == Filter.gauss.name:
+        img_rgb_f = utils.apply_filter(img_rgb, type='gaussian')
+    if fltr.name == Filter.gauss.name:
+        img_rgb_f = utils.apply_filter(img_rgb, type='median')
+
+    # plt.imshow(img_rgb_f)
+    # plt.show()
+
+    # Image segmentation
+    img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb_f, r, c, feature_type)
 
     if feature_type.value == 3:
         res_dir = img.value['dest3']
     if feature_type.value == 5:
         res_dir = img.value['dest5']
 
-    cluster_fig.savefig(res_dir + "clusters3D.png")
+    cluster_fig.savefig(res_dir + "cluster_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
 
     # show original and segmented image
     fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
     ax[0].imshow(img_rgb)
-    ax[1].imshow(img_rgb_gauss)
+    ax[1].imshow(img_rgb_f)
     ax[2].imshow(img_rgb_seg)
     plt.show()
-    fig.savefig(res_dir + "seg.png")
+
+    plt.imshow(img_rgb_seg)
+    plt.title("r = %s   c = %s   p = %s" % (r, c, n_peaks))
+    plt.savefig(res_dir + "seg_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
 
     print("Mission accomplished.")
