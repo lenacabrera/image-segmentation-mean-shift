@@ -111,7 +111,7 @@ def ms_speedup1(data, r):
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[peak_indices[indices[0]]]
-                labels[indices] = labels[idx]
+                # labels[indices] = labels[idx]
                 # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
             else:
@@ -187,7 +187,6 @@ def ms_speedup2(data, r, c):
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[peak_indices[indices[0]]]
-                labels[indices] = labels[idx]
                 # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
                 # assign points within r/d distance of search path the same label
@@ -310,7 +309,9 @@ def compute_distances(data_point, data, metric='euclidean'):
     distances : vector of distances with shape [n pixels]
 
     """
-    distances = np.array([euclidean_distance(data_point.reshape(1, -1), p.reshape(1, -1)) for p in data])
+    data_point_stacked = np.tile(data_point, (data.shape[0], 1))
+    distances = np_edist(data_point_stacked.T, data.T, 0)
+    # distances = np.array([euclidean_distance(data_point.reshape(1, -1), p.reshape(1, -1)) for p in data])
     return distances
 
 
@@ -330,3 +331,22 @@ def euclidean_distance(x, y) -> np.float32:
 
     """
     return np.linalg.norm(x-y)
+
+
+@njit
+def np_apply_along_axis(func1d, axis, x, y):
+  assert x.ndim == 2
+  assert axis in [0, 1]
+  if axis == 0:
+    result = np.empty(x.shape[1])
+    for i in range(len(result)):
+      result[i] = func1d(x[:, i], y[:, i])
+  else:
+    result = np.empty(x.shape[0])
+    for i in range(len(result)):
+      result[i] = func1d(x[:, i], y[:, i])
+  return result
+
+@njit
+def np_edist(x, y, axis):
+  return np_apply_along_axis(euclidean_distance, axis, x, y)

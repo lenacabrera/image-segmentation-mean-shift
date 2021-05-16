@@ -86,30 +86,30 @@ def test_mean_shift():
     data = utils.load_test_data()
     print("data shape: ", data.shape)
 
-    # print("Mean shift with no speedup...")
-    # labels, peaks = mean_shift.ms_no_speedup(data, r=2)
-    # print("mean shift - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    # plotclusters3D(data.T, labels, peaks.T)
+    print("Mean shift with no speedup...")
+    labels, peaks = mean_shift.ms_no_speedup(data, r=2)
+    print("mean shift - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    plotclusters3D(data.T, labels, peaks.T)
 
-    # print("Mean shift with 1. speedup...")
-    # labels, peaks = mean_shift.ms_speedup1(data, r=2)
-    # print("1. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    # plotclusters3D(data.T, labels, peaks.T)
+    print("Mean shift with 1. speedup...")
+    labels, peaks = mean_shift.ms_speedup1(data, r=2)
+    print("1. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    plotclusters3D(data.T, labels, peaks.T)
 
-    # print("Mean shift with 2. speedup...")
-    # labels, peaks = mean_shift.ms_speedup2(data, r=12, c=4)
-    # print("2. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    # plotclusters3D(data.T, labels, peaks.T)
+    print("Mean shift with 2. speedup...")
+    labels, peaks = mean_shift.ms_speedup2(data, r=2, c=4)
+    print("2. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    plotclusters3D(data.T, labels, peaks.T)
 
 
 if __name__ == '__main__':
-    # test_mean_shift()
+    test_mean_shift()
 
     # Configuration
-    img = Image.img1
+    img = Image.img2
     feature_type = FeatureType.color  # color, color_spatial
     fltr = Filter.none
-    r = 30
+    r = 10
     c = 4
 
     img_rgb = utils.load_image(img)
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     plt.imshow(img_rgb_seg)
     plt.title("r = %s   c = %s   p = %s" % (r, c, n_peaks))
-    plt.savefig(res_dir + "seg_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
+    # plt.savefig(res_dir + "seg_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
     plt.show()
 
     print("Mission accomplished.")
