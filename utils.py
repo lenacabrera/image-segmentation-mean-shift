@@ -1,4 +1,5 @@
 import scipy.io
+import scipy.ndimage
 import matplotlib.pyplot as plt
 import numpy as np
 from main import FeatureType
@@ -60,3 +61,11 @@ def retrieve_features(img, feature_type):
         image = np.append(img, coordinates.T, axis=2)
         image = image.reshape(img.shape[0] * img.shape[1], img.shape[2])
     return image.T
+
+
+def apply_filter(img_rgb, type):
+    if type == 'gaussian':
+        return scipy.ndimage.gaussian_filter(img_rgb, sigma=0.5)
+    if type == 'median':
+        return scipy.ndimage.median_filter(img_rgb, size=10)
+

@@ -53,11 +53,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     # plot clusters
     bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
     plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    # show original and segmented image
-    fig, ax = plt.subplots(2, 1, sharex=True, sharey=False)
-    ax[0].imshow(img_rgb)
-    ax[1].imshow(img_rgb_seg)
-    plt.show()
+    return img_rgb_seg
 
 
 def test_mean_shift():
@@ -93,10 +89,24 @@ if __name__ == '__main__':
     imgs = utils.load_images(filenames=["deer10.png", "181091.jpg", "368078.jpg"])
     img_rgb = imgs[0]
 
+    # Preprocessing (i.e. apply filter)
+    img_rgb_gauss = utils.apply_filter(img_rgb, type='gaussian')
+    img_rgb_median = utils.apply_filter(img_rgb, type='median')
+
+    plt.imshow(img_rgb_gauss)
+    plt.show()
+
     # Image segmentation
     r = 10
     c = 4
     feature_type = FeatureType.color  # color, color_spatial
-    image_segmentation(img_rgb, r, c, feature_type)
+    img_rgb_seg = image_segmentation(img_rgb_gauss, r, c, feature_type)
+
+    # show original and segmented image
+    fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
+    ax[0].imshow(img_rgb)
+    ax[1].imshow(img_rgb_gauss)
+    ax[2].imshow(img_rgb_seg)
+    plt.show()
 
     print("Mission accomplished.")
