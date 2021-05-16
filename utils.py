@@ -63,7 +63,7 @@ def retrieve_features(img, feature_type):
         y = np.array(list(range(img.shape[1])))
         coordinates = np.array(np.meshgrid(x, y))
         image = np.append(img, coordinates.T, axis=2)
-        image = image.reshape(img.shape[0] * img.shape[1], img.shape[2])
+        image = image.reshape(image.shape[0] * image.shape[1], image.shape[2])
     return image.T
 
 
