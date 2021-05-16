@@ -62,7 +62,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_lab = rgb2lab(img_rgb)
     img_lab = utils.retrieve_features(img_lab, feature_type)
     # perform image segmentation using mean shift algorithm
-    labels, peaks = mean_shift.ms_no_speedup(img_lab, r)
+    labels, peaks = mean_shift.ms_speedup2(img_lab, r, c)
     # postprocess segmentation data
     segments = dict(zip(np.unique(labels), peaks))
     segmented = np.array([segments[l] if l in segments.keys() else l for l in labels])
@@ -70,9 +70,10 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_rgb_seg = lab2rgb(img_seg_lab)
     print("Found %s clusters." % len(segments))
     # plot clusters
-    bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
-    fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    return img_rgb_seg, fig, len(segments)
+    # bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
+    # fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
+    # return img_rgb_seg, fig, len(segments)
+    return img_rgb_seg, 0, len(segments)
 
 
 def test_mean_shift():
@@ -103,13 +104,13 @@ def test_mean_shift():
 
 
 if __name__ == '__main__':
-    # test_mean_shift()
+    test_mean_shift()
 
     # Configuration
     img = Image.img4
     feature_type = FeatureType.color  # color, color_spatial
     fltr = Filter.none
-    r = 12
+    r = 2
     c = 4
 
     img_rgb = utils.load_image(img)
@@ -124,24 +125,25 @@ if __name__ == '__main__':
     # plt.show()
 
     # Image segmentation
-    img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb_f, r, c, feature_type)
+    img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb, r, c, feature_type)
 
     if feature_type.value == 3:
         res_dir = img.value['dest3']
     if feature_type.value == 5:
         res_dir = img.value['dest5']
 
-    cluster_fig.savefig(res_dir + "cluster_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
+    # cluster_fig.savefig(res_dir + "cluster_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
 
     # show original and segmented image
-    fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
-    ax[0].imshow(img_rgb)
-    ax[1].imshow(img_rgb_f)
-    ax[2].imshow(img_rgb_seg)
-    plt.show()
+    # fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
+    # ax[0].imshow(img_rgb)
+    # ax[1].imshow(img_rgb_f)
+    # ax[2].imshow(img_rgb_seg)
+    # plt.show()
 
     plt.imshow(img_rgb_seg)
     plt.title("r = %s   c = %s   p = %s" % (r, c, n_peaks))
     plt.savefig(res_dir + "seg_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
+    plt.show()
 
     print("Mission accomplished.")

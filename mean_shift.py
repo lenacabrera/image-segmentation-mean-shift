@@ -94,9 +94,10 @@ def ms_speedup1(data, r):
     unique_labels = 1
 
     # first data point
-    peak, _ = find_peak(data, 0, r, threshold=0.01)
+    peak, window_indices = find_peak(data, 0, r, threshold=0.01)
     peaks[0, :] = peak
     labels[0] = unique_labels
+    labels[window_indices] = labels[0]
     unique_labels += 1
 
     # remaining data points
@@ -110,7 +111,7 @@ def ms_speedup1(data, r):
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[peak_indices[indices[0]]]
-                # labels[indices] = labels[idx]
+                labels[indices] = labels[idx]
                 # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
             if labels[idx] == 0:
@@ -166,16 +167,19 @@ def ms_speedup2(data, r, c):
     unique_labels = 1
 
     # first data point
-    peak, _ = find_peak(data, 0, r, threshold=0.01)
+    peak, window_indices, cpts = find_peak_opt(data, 0, r, threshold=0.01, c=c)
     peaks[0, :] = peak
     labels[0] = unique_labels
+    path_indices = np.argwhere(cpts == 1)
+    labels[window_indices] = unique_labels
+    labels[path_indices] = unique_labels
     unique_labels += 1
 
     # remaining data points
     for idx in tqdm(range(1, n_data_points)):
 
         if labels[idx] == 0:
-            peak, window_indices, cpts = find_peak_opt(data, idx, r, threshold=0.01)
+            peak, window_indices, cpts = find_peak_opt(data, idx, r, threshold=0.01, c=c)
             path_indices = np.argwhere(cpts == 1)
 
             # check for similar peaks
@@ -246,7 +250,7 @@ def find_peak(data, idx, r, threshold):
     return peak, window_indices
 
 
-def find_peak_opt(data, idx, r, threshold, c=4):
+def find_peak_opt(data, idx, r, threshold, c):
     """
     Computes density peak associated with a point whose column index is provided with speedup:
     associates points that are within a distance of r/c of the search path with the converged peak.
