@@ -72,8 +72,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     # plot clusters
     # bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
     # fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    # return img_rgb_seg, fig, len(segments)
-    return img_rgb_seg, 0, len(segments)
+    return img_rgb_seg, 0 ,len(segments)
 
 
 def test_mean_shift():
@@ -87,30 +86,30 @@ def test_mean_shift():
     data = utils.load_test_data()
     print("data shape: ", data.shape)
 
-    print("Mean shift with no speedup...")
-    labels, peaks = mean_shift.ms_no_speedup(data, r=2)
-    print("mean shift - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks.T)
+    # print("Mean shift with no speedup...")
+    # labels, peaks = mean_shift.ms_no_speedup(data, r=2)
+    # print("mean shift - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    # plotclusters3D(data.T, labels, peaks.T)
 
-    print("Mean shift with 1. speedup...")
-    labels, peaks = mean_shift.ms_speedup1(data, r=2)
-    print("1. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks.T)
+    # print("Mean shift with 1. speedup...")
+    # labels, peaks = mean_shift.ms_speedup1(data, r=2)
+    # print("1. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    # plotclusters3D(data.T, labels, peaks.T)
 
-    print("Mean shift with 2. speedup...")
-    labels, peaks = mean_shift.ms_speedup2(data, r=2, c=4)
-    print("2. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
-    plotclusters3D(data.T, labels, peaks.T)
+    # print("Mean shift with 2. speedup...")
+    # labels, peaks = mean_shift.ms_speedup2(data, r=12, c=4)
+    # print("2. speedup - # cluster: %s, peaks: %s\n" % (np.unique(labels).size, peaks))
+    # plotclusters3D(data.T, labels, peaks.T)
 
 
 if __name__ == '__main__':
-    test_mean_shift()
+    # test_mean_shift()
 
     # Configuration
-    img = Image.img4
+    img = Image.img1
     feature_type = FeatureType.color  # color, color_spatial
     fltr = Filter.none
-    r = 2
+    r = 30
     c = 4
 
     img_rgb = utils.load_image(img)

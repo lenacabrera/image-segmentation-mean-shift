@@ -114,7 +114,7 @@ def ms_speedup1(data, r):
                 labels[indices] = labels[idx]
                 # assign points within current point's window the same label
                 labels[window_indices] = labels[idx]
-            if labels[idx] == 0:
+            else:
                 # assign new label for new peaks
                 labels[idx] = unique_labels
                 # assign points within current point's window the same label
@@ -183,7 +183,7 @@ def ms_speedup2(data, r, c):
             path_indices = np.argwhere(cpts == 1)
 
             # check for similar peaks
-            indices = np.argwhere(compute_distances(peak, peaks) < r / 2).flatten()
+            indices = np.argwhere(compute_distances(peak, peaks) < (r / 2)).flatten()
             if indices.size > 0:
                 # assign same label for similar peaks
                 labels[idx] = labels[peak_indices[indices[0]]]
@@ -281,7 +281,7 @@ def find_peak_opt(data, idx, r, threshold, c):
         # define window
         distances = compute_distances(center, data.T, 'euclidean')
         # check if points are similar, i.e. distance between them is smaller r/c
-        cpts[distances < r / c] = 1
+        cpts[distances < (r / c)] = 1
         # retrieve points in window
         window_indices = np.argwhere(distances <= r).flatten()
         window = data.T[window_indices]
