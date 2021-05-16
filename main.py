@@ -8,10 +8,10 @@ from plotclusters3D import plotclusters3D
 
 class Image(Enum):
 
-    img1 = {'src': "img/img1.jpg", 'dest':  "results/img1/"}
-    img2 = {'src': "img/img2.jpg", 'dest':  "results/img2/"}
-    img3 = {'src': "img/img3.jpg", 'dest':  "results/img3/"}
-    img4 = {'src': "img/deer10.jpg", 'dest':  "results/img4/"}
+    img1 = {'src': "img/img1.jpg", 'dest3': "results/3D/img1/", 'dest5': "results/5D/img1/"}
+    img2 = {'src': "img/img2.jpg", 'dest3': "results/3D/img2/", 'dest5': "results/5D/img2/"}
+    img3 = {'src': "img/img3.jpg", 'dest3': "results/3D/img3/", 'dest5': "results/5D/img3/"}
+    img4 = {'src': "img/deer10.png", 'dest3': "results/3D/img4/", 'dest5': "results/5D/img4/"}
 
 
 class FeatureType(Enum):
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # imgs = utils.load_images(filenames=["deer10.png", "img1.jpg", "img3.jpg"])
     # img_rgb = imgs[0]
 
-    img = Image.img1
+    img = Image.img4
     img_rgb = utils.load_image(img)
 
     # Preprocessing (i.e. apply filter)
@@ -111,13 +111,19 @@ if __name__ == '__main__':
     feature_type = FeatureType.color  # color, color_spatial
     img_rgb_seg, cluster_fig = image_segmentation(img_rgb_gauss, r, c, feature_type)
 
+    if feature_type.value == 3:
+        res_dir = img.value['dest3']
+    if feature_type.value == 5:
+        res_dir = img.value['dest5']
+
+    cluster_fig.savefig(res_dir + "clusters3D.png")
+
     # show original and segmented image
     fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
     ax[0].imshow(img_rgb)
     ax[1].imshow(img_rgb_gauss)
     ax[2].imshow(img_rgb_seg)
     plt.show()
-
-    cluster_fig.savefig(img.value['dest'] + "clusters3D.png")
+    fig.savefig(res_dir + "seg.png")
 
     print("Mission accomplished.")
