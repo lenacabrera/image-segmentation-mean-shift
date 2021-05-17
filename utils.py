@@ -69,7 +69,7 @@ def retrieve_features(img, feature_type):
 
 def apply_filter(img_rgb, type):
     if type == 'gaussian':
-        return scipy.ndimage.gaussian_filter(img_rgb, sigma=0.5)
+        return scipy.ndimage.gaussian_filter(img_rgb, sigma=1)
     if type == 'median':
-        return scipy.ndimage.median_filter(img_rgb, size=10)
+        return scipy.ndimage.median_filter(img_rgb, size=1)
 

@@ -69,7 +69,8 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_rgb_seg = lab2rgb(img_seg_lab)
     print("Found %s clusters." % len(segments))
     # plot clusters
-    bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])
+    img_bgr_seg = img_rgb_seg[..., ::-1]
+    bgr_peaks = img_bgr_seg[..., ::-1].reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])
     fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
     plt.show()
     return img_rgb_seg, fig,len(segments)
@@ -106,11 +107,11 @@ if __name__ == '__main__':
     # test_mean_shift()
 
     # Configuration
-    img = Image.img5
-    feature_type = FeatureType.color_spatial  # color, color_spatial
-    fltr = Filter.gauss
-    r = 2
-    c = 1
+    img = Image.img4
+    feature_type = FeatureType.color  # color, color_spatial
+    fltr = Filter.none
+    r = 20
+    c = 2
 
     img_rgb = utils.load_image(img)
     plt.imshow(img_rgb)

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 def plotclusters3D(data, labels, peaks, rand_color=True):
@@ -17,7 +18,7 @@ def plotclusters3D(data, labels, peaks, rand_color=True):
     rgb_peaks = bgr_peaks[..., ::-1]
     rgb_peaks /= 255.0
     rgb_peaks = np.array(peaks[:, 0:3], dtype=float)
-    for idx, peak in enumerate(rgb_peaks):
+    for idx, peak in enumerate(tqdm(rgb_peaks)):
         if rand_color:
             color = np.random.uniform(0, 1, 3)
         else:
