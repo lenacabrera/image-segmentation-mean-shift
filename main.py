@@ -70,7 +70,7 @@ def image_segmentation(img_rgb, r, c, feature_type):
     print("Found %s clusters." % len(segments))
     # plot clusters
     img_bgr_seg = img_rgb_seg[..., ::-1]
-    bgr_peaks = img_bgr_seg[..., ::-1].reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])
+    bgr_peaks = img_bgr_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])
     fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
     plt.show()
     return img_rgb_seg, fig,len(segments)
@@ -140,13 +140,6 @@ if __name__ == '__main__':
     img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb_f, r, c, feature_type)
 
     cluster_fig.savefig(res_dir + "cluster_gauss_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
-
-    # show original and segmented image
-    # fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
-    # ax[0].imshow(img_rgb)
-    # ax[1].imshow(img_rgb_f)
-    # ax[2].imshow(img_rgb_seg)
-    # plt.show()
 
     plt.imshow(img_rgb_seg)
     plt.title("r = %s   c = %s   p = %s" % (r, c, n_peaks))
