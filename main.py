@@ -15,6 +15,7 @@ class Image(Enum):
     img2 = {'src': "img/img2.jpg", 'dest3': "results/3D/img2/", 'dest5': "results/5D/img2/"}
     img3 = {'src': "img/img3.jpg", 'dest3': "results/3D/img3/", 'dest5': "results/5D/img3/"}
     img4 = {'src': "img/deer10.png", 'dest3': "results/3D/img4/", 'dest5': "results/5D/img4/"}
+    img5 = {'src': "img/img5.jpg", 'dest3': "results/3D/img5/", 'dest5': "results/5D/img5/"}
 
 
 class FeatureType(Enum):
@@ -55,8 +56,6 @@ def image_segmentation(img_rgb, r, c, feature_type):
     -------
 
     """
-    # TODO smaller part of image for testing
-    # img_rgb = img_rgb[-64:-32, 70:102, :]
 
     # preprocess image
     img_lab = rgb2lab(img_rgb)
@@ -70,9 +69,10 @@ def image_segmentation(img_rgb, r, c, feature_type):
     img_rgb_seg = lab2rgb(img_seg_lab)
     print("Found %s clusters." % len(segments))
     # plot clusters
-    # bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])[..., ::-1]
-    # fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
-    return img_rgb_seg, 0 ,len(segments)
+    bgr_peaks = img_rgb_seg.reshape(img_rgb_seg.shape[0] * img_rgb_seg.shape[1], img_rgb_seg.shape[2])
+    fig = plotclusters3D(img_lab.T, labels, bgr_peaks, rand_color=False)
+    plt.show()
+    return img_rgb_seg, fig,len(segments)
 
 
 def test_mean_shift():
@@ -103,35 +103,42 @@ def test_mean_shift():
 
 
 if __name__ == '__main__':
-    test_mean_shift()
+    # test_mean_shift()
 
     # Configuration
-    img = Image.img2
-    feature_type = FeatureType.color  # color, color_spatial
-    fltr = Filter.none
-    r = 10
-    c = 4
+    img = Image.img5
+    feature_type = FeatureType.color_spatial  # color, color_spatial
+    fltr = Filter.gauss
+    r = 2
+    c = 1
 
     img_rgb = utils.load_image(img)
-
-    img_rgb_f = img_rgb
-    if fltr.name == Filter.gauss.name:
-        img_rgb_f = utils.apply_filter(img_rgb, type='gaussian')
-    if fltr.name == Filter.gauss.name:
-        img_rgb_f = utils.apply_filter(img_rgb, type='median')
-
-    # plt.imshow(img_rgb_f)
-    # plt.show()
-
-    # Image segmentation
-    img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb, r, c, feature_type)
+    plt.imshow(img_rgb)
+    plt.show()
 
     if feature_type.value == 3:
         res_dir = img.value['dest3']
     if feature_type.value == 5:
         res_dir = img.value['dest5']
 
-    # cluster_fig.savefig(res_dir + "cluster_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
+    img_rgb_f = img_rgb
+    if fltr.name == Filter.gauss.name:
+        img_rgb_f = utils.apply_filter(img_rgb, type='gaussian')
+        plt.imshow(img_rgb_f)
+        plt.savefig("results/filter/%s" % img.name + "/gauss_std1.png")
+    if fltr.name == Filter.median.name:
+        img_rgb_f = utils.apply_filter(img_rgb, type='median')
+        plt.imshow(img_rgb_f)
+        plt.show()
+        plt.savefig("results/filter/%s" % img.name + "/median_size1.png")
+
+    # plt.imshow(img_rgb_f)
+    # plt.show()
+
+    # Image segmentation
+    img_rgb_seg, cluster_fig, n_peaks = image_segmentation(img_rgb_f, r, c, feature_type)
+
+    cluster_fig.savefig(res_dir + "cluster_gauss_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
 
     # show original and segmented image
     # fig, ax = plt.subplots(3, 1, sharex=False, sharey=True)
@@ -142,7 +149,5 @@ if __name__ == '__main__':
 
     plt.imshow(img_rgb_seg)
     plt.title("r = %s   c = %s   p = %s" % (r, c, n_peaks))
-    # plt.savefig(res_dir + "seg_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
+    plt.savefig(res_dir + "seg_gauss_r%s_c%s_p%s" % (r, c, n_peaks) + ".png")
     plt.show()
-
-    print("Mission accomplished.")
