@@ -335,18 +335,49 @@ def euclidean_distance(x, y) -> np.float32:
 
 @njit
 def np_apply_along_axis(func1d, axis, x, y):
-  assert x.ndim == 2
-  assert axis in [0, 1]
-  if axis == 0:
-    result = np.empty(x.shape[1])
-    for i in range(len(result)):
-      result[i] = func1d(x[:, i], y[:, i])
-  else:
-    result = np.empty(x.shape[0])
-    for i in range(len(result)):
-      result[i] = func1d(x[:, i], y[:, i])
-  return result
+    """
+    Here, enables efficient computation of euclidean distance with numba over specified axis.
+    Reference: https://github.com/numba/numba/issues/1269
+
+    Parameters
+    ----------
+    func1d : function for computing euclidean distance
+    axis : axis along which distance is to be compute
+    x : matrix of data points
+    y : matrix of data points
+
+    Returns
+    -------
+    result : here, euclidean distance between x and y
+
+    """
+    assert x.ndim == 2
+    assert axis in [0, 1]
+    if axis == 0:
+        result = np.empty(x.shape[1])
+        for i in range(len(result)):
+          result[i] = func1d(x[:, i], y[:, i])
+    else:
+        result = np.empty(x.shape[0])
+        for i in range(len(result)):
+          result[i] = func1d(x[:, i], y[:, i])
+    return result
 
 @njit
 def np_edist(x, y, axis):
-  return np_apply_along_axis(euclidean_distance, axis, x, y)
+    """
+    Here, enables efficient computation of euclidean distance with numba over specified axis.
+    Reference: https://github.com/numba/numba/issues/1269
+    
+    Parameters
+    ----------
+    x : matrix of data points
+    y : matrix of data points
+    axis : axis along which distance is to be compute
+
+    Returns
+    -------
+    euclidean distance between x and y
+
+    """
+    return np_apply_along_axis(euclidean_distance, axis, x, y)
